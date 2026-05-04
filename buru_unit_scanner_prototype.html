@@ -1,0 +1,488 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --buru-black:#0a0a0a;--buru-white:#f5f4f0;--buru-accent:#c8f542;
+    --buru-muted:#7a7a72;--buru-surface:#141414;--buru-border:#2a2a2a;
+    --buru-success:#4af596;--buru-warn:#f5c842;--buru-error:#f54a4a;
+  }
+  #app{
+    font-family:'DM Sans',sans-serif;
+    background:var(--buru-black);color:var(--buru-white);
+    width:100%;min-height:520px;display:flex;flex-direction:column;
+    position:relative;overflow:hidden;border-radius:var(--border-radius-lg);
+  }
+  .screen{display:none;flex-direction:column;flex:1;width:100%;height:100%;animation:fadeIn .35s ease}
+  .screen.active{display:flex}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .mono{font-family:'Space Mono',monospace}
+  .top-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;border-bottom:1px solid var(--buru-border);
+    background:var(--buru-surface);flex-shrink:0;
+  }
+  .logo{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.12em;color:var(--buru-accent)}
+  .step-pill{
+    font-size:11px;font-family:'Space Mono',monospace;letter-spacing:.06em;
+    background:var(--buru-border);border-radius:20px;padding:3px 10px;
+    color:var(--buru-muted);
+  }
+  .step-pill span{color:var(--buru-white)}
+  .content{flex:1;padding:20px 18px;display:flex;flex-direction:column}
+  .btn{
+    display:block;width:100%;padding:14px;border-radius:10px;border:none;
+    font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+    cursor:pointer;transition:all .18s ease;letter-spacing:.02em;
+  }
+  .btn-primary{background:var(--buru-accent);color:var(--buru-black)}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--buru-muted);border:1px solid var(--buru-border);margin-top:10px;font-size:13px}
+  .btn-ghost:hover{border-color:var(--buru-muted);color:var(--buru-white)}
+  .section-title{font-size:22px;font-weight:600;line-height:1.3;margin-bottom:6px}
+  .section-sub{font-size:13px;color:var(--buru-muted);line-height:1.6;margin-bottom:22px}
+  .camera-frame{
+    flex:1;background:var(--buru-surface);border-radius:12px;
+    border:1.5px solid var(--buru-border);position:relative;
+    overflow:hidden;display:flex;align-items:center;justify-content:center;
+    min-height:200px;margin-bottom:16px;
+  }
+  .camera-grid{
+    position:absolute;inset:0;
+    background-image:linear-gradient(var(--buru-border) 1px,transparent 1px),
+      linear-gradient(90deg,var(--buru-border) 1px,transparent 1px);
+    background-size:30px 30px;opacity:.3;
+  }
+  .foot-silhouette{
+    width:90px;height:150px;position:relative;z-index:2;
+    animation:breathe 2.5s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.9;transform:scale(1.03)}}
+  .scan-line{
+    position:absolute;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--buru-accent),transparent);
+    animation:scanDown 2s ease-in-out infinite;z-index:3;top:20%;
+  }
+  @keyframes scanDown{0%{top:15%}100%{top:85%}}
+  .corner{position:absolute;width:18px;height:18px;border-color:var(--buru-accent);border-style:solid;z-index:4}
+  .corner-tl{top:12px;left:12px;border-width:2px 0 0 2px}
+  .corner-tr{top:12px;right:12px;border-width:2px 2px 0 0}
+  .corner-bl{bottom:12px;left:12px;border-width:0 0 2px 2px}
+  .corner-br{bottom:12px;right:12px;border-width:0 2px 2px 0}
+  .camera-label{
+    position:absolute;bottom:10px;left:0;right:0;text-align:center;
+    font-size:11px;color:var(--buru-muted);font-family:'Space Mono',monospace;
+    letter-spacing:.08em;z-index:5;
+  }
+  .gyro-ring{
+    width:100px;height:100px;border-radius:50%;
+    border:2px solid var(--buru-border);position:relative;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+    transition:border-color .4s ease;
+  }
+  .gyro-ring.good{border-color:var(--buru-success)}
+  .gyro-ring-inner{
+    width:60px;height:60px;border-radius:50%;
+    border:1px solid var(--buru-border);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .gyro-dot{
+    width:12px;height:12px;border-radius:50%;
+    background:var(--buru-muted);transition:all .3s ease;
+    transform:translate(0px,0px);
+  }
+  .gyro-dot.locked{background:var(--buru-success)}
+  .axis-row{display:flex;gap:10px;margin-bottom:12px}
+  .axis-card{
+    flex:1;background:var(--buru-surface);border:1px solid var(--buru-border);
+    border-radius:8px;padding:10px 12px;
+  }
+  .axis-label{font-size:11px;color:var(--buru-muted);font-family:'Space Mono',monospace;margin-bottom:4px}
+  .axis-val{font-size:18px;font-family:'Space Mono',monospace;transition:color .3s}
+  .axis-val.ok{color:var(--buru-success)}
+  .axis-val.warn{color:var(--buru-warn)}
+  .status-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.06em;
+    padding:5px 12px;border-radius:20px;margin-bottom:20px;
+  }
+  .status-tag.locked{background:rgba(74,245,150,.12);color:var(--buru-success);border:1px solid rgba(74,245,150,.3)}
+  .status-tag.scanning{background:rgba(200,245,66,.1);color:var(--buru-accent);border:1px solid rgba(200,245,66,.25)}
+  .status-tag.processing{background:rgba(245,200,66,.1);color:var(--buru-warn);border:1px solid rgba(245,200,66,.25)}
+  .dot-pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse .9s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .progress-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+  .proc-step{
+    display:flex;align-items:center;gap:12px;
+    background:var(--buru-surface);border:1px solid var(--buru-border);
+    border-radius:8px;padding:11px 14px;
+    transition:all .3s ease;
+  }
+  .proc-step.done{border-color:rgba(74,245,150,.3);background:rgba(74,245,150,.05)}
+  .proc-step.active{border-color:rgba(200,245,66,.3);background:rgba(200,245,66,.05)}
+  .proc-icon{
+    width:28px;height:28px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:12px;
+    background:var(--buru-border);color:var(--buru-muted);
+    font-family:'Space Mono',monospace;
+  }
+  .proc-step.done .proc-icon{background:rgba(74,245,150,.2);color:var(--buru-success)}
+  .proc-step.active .proc-icon{background:rgba(200,245,66,.15);color:var(--buru-accent);animation:pulse .8s infinite}
+  .proc-text{font-size:13px;color:var(--buru-muted);transition:color .3s}
+  .proc-step.done .proc-text,.proc-step.active .proc-text{color:var(--buru-white)}
+  .proc-bar{height:2px;background:var(--buru-border);border-radius:2px;overflow:hidden;margin-bottom:16px}
+  .proc-fill{height:100%;background:var(--buru-accent);width:0%;transition:width .5s ease;border-radius:2px}
+  .buru-id-card{
+    background:var(--buru-surface);border:1px solid var(--buru-accent);
+    border-radius:14px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;
+  }
+  .buru-id-card::before{
+    content:'';position:absolute;top:-40px;right:-40px;
+    width:120px;height:120px;border-radius:50%;
+    background:rgba(200,245,66,.06);
+  }
+  .buru-id-label{font-size:10px;font-family:'Space Mono',monospace;color:var(--buru-muted);letter-spacing:.14em;margin-bottom:14px}
+  .buru-id-hash{font-size:20px;font-family:'Space Mono',monospace;color:var(--buru-accent);letter-spacing:.06em;margin-bottom:18px}
+  .measures-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .measure-cell{background:var(--buru-black);border-radius:8px;padding:10px 8px;text-align:center}
+  .measure-val{font-size:19px;font-family:'Space Mono',monospace;font-weight:700;color:var(--buru-white);line-height:1}
+  .measure-unit{font-size:10px;color:var(--buru-muted);font-family:'Space Mono',monospace;margin:2px 0}
+  .measure-key{font-size:11px;color:var(--buru-muted)}
+  .confidence-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--buru-border)}
+  .conf-label{font-size:11px;color:var(--buru-muted);font-family:'Space Mono',monospace}
+  .conf-bar-wrap{flex:1;height:4px;background:var(--buru-border);border-radius:4px;margin:0 10px;overflow:hidden}
+  .conf-bar-fill{height:100%;border-radius:4px;width:0%;transition:width 1s ease .3s}
+  .conf-pct{font-size:13px;font-family:'Space Mono',monospace;color:var(--buru-accent)}
+  .rec-size{
+    text-align:center;background:rgba(200,245,66,.08);
+    border:1px solid rgba(200,245,66,.2);border-radius:10px;padding:14px;margin-bottom:14px;
+  }
+  .rec-size-num{font-size:36px;font-weight:700;color:var(--buru-accent);font-family:'Space Mono',monospace;line-height:1}
+  .rec-size-label{font-size:11px;color:var(--buru-muted);margin-top:4px;font-family:'Space Mono',monospace;letter-spacing:.08em}
+  .note-row{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--buru-surface);border-radius:8px;border:1px solid var(--buru-border);margin-bottom:10px}
+  .note-dot{width:6px;height:6px;border-radius:50%;background:var(--buru-warn);flex-shrink:0;margin-top:5px}
+  .note-text{font-size:12px;color:var(--buru-muted);line-height:1.5}
+  .welcome-icon{font-size:48px;text-align:center;margin-bottom:14px}
+  .feature-list{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+  .feature-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--buru-muted)}
+  .feat-dot{width:5px;height:5px;border-radius:50%;background:var(--buru-accent);flex-shrink:0}
+  .buru-card-demo{
+    background:var(--buru-surface);border:1px solid var(--buru-border);border-radius:10px;
+    padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;
+  }
+  .card-pattern{
+    width:56px;height:56px;border-radius:8px;background:var(--buru-white);
+    flex-shrink:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;padding:4px;
+  }
+  .cp{border-radius:2px}
+  .cp.b{background:#000}
+  .cp.w{background:#fff;border:1px solid #eee}
+  .card-info{flex:1}
+  .card-info-title{font-size:13px;font-weight:500;margin-bottom:3px}
+  .card-info-sub{font-size:12px;color:var(--buru-muted);line-height:1.4}
+  .detected-tag{font-size:10px;font-family:'Space Mono',monospace;color:var(--buru-success);letter-spacing:.06em}
+  .progress-bar-anim{height:3px;background:var(--buru-accent);border-radius:3px;width:0;animation:loadBar 1.8s ease forwards}
+  @keyframes loadBar{0%{width:0}100%{width:100%}}
+  .restart-hint{text-align:center;font-size:12px;color:var(--buru-muted);margin-top:6px;padding-bottom:4px}
+</style>
+
+<div id="app">
+
+  <div id="s-welcome" class="screen active">
+    <div class="top-bar"><span class="logo">BURU UNIT</span><span class="step-pill mono">v0.1 PROTO</span></div>
+    <div class="content">
+      <div class="welcome-icon">👟</div>
+      <div class="section-title">Foot measurement,<br>reimagined.</div>
+      <div class="section-sub">Point your phone camera at your foot + Buru Card. Get a precise Buru ID in seconds.</div>
+      <div class="feature-list">
+        <div class="feature-item"><div class="feat-dot"></div>Uses gyroscope for level calibration</div>
+        <div class="feature-item"><div class="feat-dot"></div>Buru Card eliminates perspective distortion</div>
+        <div class="feature-item"><div class="feat-dot"></div>Outputs length, width & instep as Buru ID</div>
+        <div class="feature-item"><div class="feat-dot"></div>Works in any mobile browser — no app needed</div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="goTo('s-gyro')">Start scanning</button>
+      <button class="btn btn-ghost" onclick="goTo('s-card')">Learn about Buru Card first</button>
+    </div>
+  </div>
+
+  <div id="s-card" class="screen">
+    <div class="top-bar"><span class="logo">BURU CARD</span><span class="step-pill mono">CALIBRATION</span></div>
+    <div class="content">
+      <div class="section-title">Your calibration anchor</div>
+      <div class="section-sub">Place the Buru Card flat on the floor next to your foot before scanning. The scanner detects its known geometry to remove perspective distortion.</div>
+      <div class="buru-card-demo">
+        <div class="card-pattern">
+          <div class="cp b"></div><div class="cp b"></div><div class="cp w"></div>
+          <div class="cp b"></div><div class="cp w"></div><div class="cp b"></div>
+          <div class="cp w"></div><div class="cp b"></div><div class="cp b"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-info-title">Buru Card v1</div>
+          <div class="card-info-sub">85.6 × 54mm — standard credit card size. Print on matte paper or use digital on a second screen.</div>
+          <div class="detected-tag" style="margin-top:6px">● MARKER PATTERN ACTIVE</div>
+        </div>
+      </div>
+      <div class="note-row"><div class="note-dot"></div><div class="note-text">Keep the card flat — do not fold or bend. Place it beside the foot, fully visible in frame.</div></div>
+      <div class="note-row"><div class="note-dot" style="background:var(--buru-muted)"></div><div class="note-text">The unique dot pattern allows the scanner to calculate homography and correct the viewing angle automatically.</div></div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="goTo('s-gyro')">Got it — start scanning</button>
+    </div>
+  </div>
+
+  <div id="s-gyro" class="screen">
+    <div class="top-bar"><span class="logo">BURU UNIT</span><span class="step-pill"><span>1</span>/4 — LEVEL CHECK</span></div>
+    <div class="content">
+      <div class="section-title">Hold phone level</div>
+      <div class="section-sub">Keep your phone steady and pointed straight down toward the floor for accurate measurements.</div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:10px 0 18px">
+        <div class="gyro-ring" id="gyroRing">
+          <div class="gyro-ring-inner">
+            <div class="gyro-dot" id="gyroDot"></div>
+          </div>
+        </div>
+        <div class="axis-row" style="width:100%">
+          <div class="axis-card"><div class="axis-label">PITCH X</div><div class="axis-val warn mono" id="axisX">+2.1°</div></div>
+          <div class="axis-card"><div class="axis-label">ROLL Y</div><div class="axis-val warn mono" id="axisY">-1.4°</div></div>
+          <div class="axis-card"><div class="axis-label">YAW Z</div><div class="axis-val ok mono" id="axisZ">+0.3°</div></div>
+        </div>
+      </div>
+      <div id="gyroStatus" class="status-tag scanning"><div class="dot-pulse"></div>ALIGNING...</div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="gyroBtn" onclick="gyroLock()" disabled style="opacity:.4">Confirm alignment</button>
+    </div>
+  </div>
+
+  <div id="s-scan" class="screen">
+    <div class="top-bar"><span class="logo">BURU UNIT</span><span class="step-pill"><span>2</span>/4 — SCANNING</span></div>
+    <div class="content" style="padding-bottom:14px">
+      <div class="camera-frame" id="cameraFrame">
+        <div class="camera-grid"></div>
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        <div class="scan-line" id="scanLine"></div>
+        <svg class="foot-silhouette" viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M30 145 C10 145 8 120 10 100 C12 80 8 60 10 40 C12 20 20 10 32 10 C44 10 50 18 52 28 C56 20 64 16 70 20 C76 24 74 34 68 38 C74 38 78 44 76 50 C80 50 84 56 80 62 C84 64 84 72 78 74 C82 82 78 100 72 115 C66 130 54 145 30 145Z" fill="rgba(200,245,66,0.15)" stroke="#c8f542" stroke-width="1.5"/>
+          <line x1="28" y1="10" x2="28" y2="145" stroke="rgba(200,245,66,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+        </svg>
+        <div class="camera-label mono">FRAME CAPTURE — LIVE</div>
+        <div id="cardDetect" style="position:absolute;bottom:32px;right:10px;font-size:10px;font-family:'Space Mono',monospace;color:var(--buru-muted);letter-spacing:.06em">CARD: SEARCHING...</div>
+      </div>
+      <div id="scanStatus" class="status-tag scanning" style="margin-bottom:12px"><div class="dot-pulse"></div>DETECTING FOOT OUTLINE</div>
+      <div class="section-sub" style="margin-bottom:12px">Place your foot flat next to the Buru Card. Keep both in frame.</div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="captureBtn" onclick="captureFrame()" style="opacity:.4" disabled>Capture frame</button>
+    </div>
+  </div>
+
+  <div id="s-process" class="screen">
+    <div class="top-bar"><span class="logo">BURU UNIT</span><span class="step-pill"><span>3</span>/4 — AI PROCESSING</span></div>
+    <div class="content">
+      <div class="section-title">Analyzing foot geometry</div>
+      <div class="section-sub">Running landmark detection, homography correction, and measurement extraction.</div>
+      <div class="proc-bar"><div class="proc-fill" id="procFill"></div></div>
+      <div class="progress-steps" id="procSteps">
+        <div class="proc-step" id="ps1"><div class="proc-icon">1</div><div class="proc-text">Buru Card marker detection</div></div>
+        <div class="proc-step" id="ps2"><div class="proc-icon">2</div><div class="proc-text">Perspective homography correction</div></div>
+        <div class="proc-step" id="ps3"><div class="proc-icon">3</div><div class="proc-text">Foot outline segmentation</div></div>
+        <div class="proc-step" id="ps4"><div class="proc-icon">4</div><div class="proc-text">Landmark extraction (heel · toe · instep)</div></div>
+        <div class="proc-step" id="ps5"><div class="proc-icon">5</div><div class="proc-text">Buru ID generation</div></div>
+      </div>
+      <div style="flex:1"></div>
+    </div>
+  </div>
+
+  <div id="s-result" class="screen">
+    <div class="top-bar"><span class="logo">BURU UNIT</span><span class="step-pill"><span>4</span>/4 — BURU ID</span></div>
+    <div class="content">
+      <div class="status-tag locked"><div class="dot-pulse"></div>SCAN COMPLETE</div>
+      <div class="buru-id-card">
+        <div class="buru-id-label">BURU ID</div>
+        <div class="buru-id-hash" id="buruHash">BRU-2E9F-R42K</div>
+        <div class="measures-grid">
+          <div class="measure-cell">
+            <div class="measure-val" id="mLen">--</div>
+            <div class="measure-unit">mm</div>
+            <div class="measure-key">Length</div>
+          </div>
+          <div class="measure-cell">
+            <div class="measure-val" id="mWid">--</div>
+            <div class="measure-unit">mm</div>
+            <div class="measure-key">Width</div>
+          </div>
+          <div class="measure-cell">
+            <div class="measure-val" id="mIns">--</div>
+            <div class="measure-unit">mm</div>
+            <div class="measure-key">Instep</div>
+          </div>
+        </div>
+        <div class="confidence-row">
+          <div class="conf-label">CONFIDENCE</div>
+          <div class="conf-bar-wrap"><div class="conf-bar-fill" id="confFill" style="background:var(--buru-accent)"></div></div>
+          <div class="conf-pct" id="confPct">0%</div>
+        </div>
+      </div>
+      <div class="rec-size">
+        <div class="rec-size-num" id="recSize">--</div>
+        <div class="rec-size-label">RECOMMENDED EU SIZE</div>
+      </div>
+      <div class="note-row"><div class="note-dot" style="background:var(--buru-muted)"></div><div class="note-text">Measurements captured via mock AI pipeline. Real deployment uses TensorFlow Lite + OpenCV landmark model.</div></div>
+      <button class="btn btn-primary" onclick="resetAll()" style="margin-top:8px">Scan again</button>
+      <div class="restart-hint">Buru ID copied to clipboard on tap ↑</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+let gyroTimer, gyroLocked=false;
+function startGyroSim(){
+  let t=0;
+  gyroTimer=setInterval(()=>{
+    t+=0.08;
+    let x=+(2.1*Math.cos(t*1.3)).toFixed(1);
+    let y=+(-1.4*Math.sin(t*0.9)).toFixed(1);
+    let z=+(0.3*Math.cos(t*0.5)).toFixed(1);
+    let dx=x/5*12,dy=y/5*12;
+    document.getElementById('axisX').textContent=(x>0?'+':'')+x+'°';
+    document.getElementById('axisY').textContent=(y>0?'+':'')+y+'°';
+    document.getElementById('axisZ').textContent=(z>0?'+':'')+z+'°';
+    document.getElementById('gyroDot').style.transform=`translate(${dx}px,${dy}px)`;
+    let ax=document.getElementById('axisX'),ay=document.getElementById('axisY');
+    ax.className='axis-val mono '+(Math.abs(x)<1?'ok':'warn');
+    ay.className='axis-val mono '+(Math.abs(y)<1?'ok':'warn');
+    if(Math.abs(x)<0.5&&Math.abs(y)<0.5&&!gyroLocked){
+      document.getElementById('gyroRing').classList.add('good');
+      document.getElementById('gyroDot').classList.add('locked');
+      document.getElementById('gyroStatus').className='status-tag locked';
+      document.getElementById('gyroStatus').innerHTML='<div class="dot-pulse"></div>LEVEL LOCKED';
+      document.getElementById('gyroBtn').disabled=false;
+      document.getElementById('gyroBtn').style.opacity='1';
+    }
+  },120);
+}
+
+function gyroLock(){
+  clearInterval(gyroTimer);
+  gyroLocked=true;
+  goTo('s-scan');
+  startScanSim();
+}
+
+let scanTimer;
+function startScanSim(){
+  let t=0;
+  let cardDetected=false;
+  scanTimer=setInterval(()=>{
+    t++;
+    if(t===12&&!cardDetected){
+      cardDetected=true;
+      document.getElementById('cardDetect').textContent='CARD: DETECTED ✓';
+      document.getElementById('cardDetect').style.color='var(--buru-success)';
+      document.getElementById('scanStatus').className='status-tag scanning';
+      document.getElementById('scanStatus').innerHTML='<div class="dot-pulse"></div>CARD LOCKED — ALIGN FOOT';
+    }
+    if(t===22){
+      document.getElementById('scanStatus').className='status-tag locked';
+      document.getElementById('scanStatus').innerHTML='<div class="dot-pulse"></div>FOOT DETECTED — HOLD STILL';
+      document.getElementById('captureBtn').disabled=false;
+      document.getElementById('captureBtn').style.opacity='1';
+      clearInterval(scanTimer);
+    }
+  },200);
+}
+
+function captureFrame(){
+  clearInterval(scanTimer);
+  goTo('s-process');
+  runProcessing();
+}
+
+function runProcessing(){
+  const steps=[
+    {id:'ps1',label:'Buru Card marker detection',pct:20},
+    {id:'ps2',label:'Perspective homography correction',pct:40},
+    {id:'ps3',label:'Foot outline segmentation',pct:60},
+    {id:'ps4',label:'Landmark extraction (heel · toe · instep)',pct:80},
+    {id:'ps5',label:'Buru ID generation',pct:100},
+  ];
+  let i=0;
+  function next(){
+    if(i>0) document.getElementById(steps[i-1].id).className='proc-step done';
+    if(i<steps.length){
+      document.getElementById(steps[i].id).className='proc-step active';
+      document.getElementById('procFill').style.width=steps[i].pct+'%';
+      i++;
+      setTimeout(next,900);
+    } else {
+      setTimeout(showResult,500);
+    }
+  }
+  setTimeout(next,400);
+}
+
+function showResult(){
+  let len=Math.round(255+Math.random()*20);
+  let wid=Math.round(90+Math.random()*12);
+  let ins=Math.round(62+Math.random()*8);
+  let conf=Math.round(91+Math.random()*7);
+  let euSize=Math.round((len/6.67)+1);
+  let hash='BRU-'+Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.random().toString(36).substr(2,4).toUpperCase();
+  goTo('s-result');
+  setTimeout(()=>{
+    document.getElementById('buruHash').textContent=hash;
+    document.getElementById('mLen').textContent=len;
+    document.getElementById('mWid').textContent=wid;
+    document.getElementById('mIns').textContent=ins;
+    document.getElementById('recSize').textContent=euSize;
+    document.getElementById('confPct').textContent=conf+'%';
+    document.getElementById('confFill').style.width=conf+'%';
+  },300);
+}
+
+function resetAll(){
+  gyroLocked=false;
+  clearInterval(gyroTimer);clearInterval(scanTimer);
+  document.getElementById('gyroRing').classList.remove('good');
+  document.getElementById('gyroDot').classList.remove('locked');
+  document.getElementById('gyroDot').style.transform='translate(0,0)';
+  document.getElementById('gyroBtn').disabled=true;
+  document.getElementById('gyroBtn').style.opacity='.4';
+  document.getElementById('gyroStatus').className='status-tag scanning';
+  document.getElementById('gyroStatus').innerHTML='<div class="dot-pulse"></div>ALIGNING...';
+  document.getElementById('axisX').textContent='+2.1°';document.getElementById('axisX').className='axis-val warn mono';
+  document.getElementById('axisY').textContent='-1.4°';document.getElementById('axisY').className='axis-val warn mono';
+  document.getElementById('axisZ').textContent='+0.3°';document.getElementById('axisZ').className='axis-val ok mono';
+  document.getElementById('cardDetect').textContent='CARD: SEARCHING...';document.getElementById('cardDetect').style.color='';
+  document.getElementById('scanStatus').className='status-tag scanning';
+  document.getElementById('scanStatus').innerHTML='<div class="dot-pulse"></div>DETECTING FOOT OUTLINE';
+  document.getElementById('captureBtn').disabled=true;document.getElementById('captureBtn').style.opacity='.4';
+  document.querySelectorAll('.proc-step').forEach(s=>s.className='proc-step');
+  document.getElementById('procFill').style.width='0%';
+  goTo('s-gyro');
+  startGyroSim();
+}
+
+window.addEventListener('load',()=>{
+  document.querySelector('#s-gyro.active')||setTimeout(()=>{},0);
+  document.getElementById('s-welcome').addEventListener('transitionend',()=>{});
+  setTimeout(()=>{
+    document.getElementById('s-gyro').classList.contains('active')&&startGyroSim();
+  },100);
+  document.querySelector('[onclick="goTo(\'s-gyro\')"]')&&(document.querySelectorAll('[onclick="goTo(\'s-gyro\')"]').forEach(b=>{
+    let orig=b.onclick;
+    b.onclick=function(){orig&&orig.call(this);startGyroSim()};
+  }));
+});
+
+document.querySelectorAll('[onclick="goTo(\'s-gyro\')"]').forEach(b=>{
+  b.addEventListener('click',()=>setTimeout(startGyroSim,50));
+});
+</script>
